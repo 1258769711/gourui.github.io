@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cy.pj.sys.dao.SysRoleDao">
+
+    <select id="selectRoles" resultType="com.cy.pj.sys.pojo.SysRole">
+          select id,name,remark,createdTime,modifiedTime,createdUser,modifiedUser
+          from sys_roles
+          <where>
+             <if test="name!=null and name!=''">
+                 name like concat("%",#{name},"%")
+             </if>
+          </where>
+          order by createdTime desc
+    </select>
+    <!--
+    1)useGeneratedKeys="true" 表示获取insert操作时写入到数据库的自增主键值
+    2)keyProperty="id" 将自增主键值赋值给参数对象的id属性
+    -->
+    <insert id="insertRole"
+            parameterType="com.cy.pj.sys.pojo.SysRole"
+            useGeneratedKeys="true"
+            keyProperty="id">
+        insert into sys_roles
+        (name,remark,createdTime,modifiedTime,createdUser,modifiedUser)
+        values
+        (#{name},#{remark},now(),now(),#{createdUser},#{modifiedUser})
+    </insert>
+
+    <!--
+    resultMap是mybatis中提供的高级映射元素，应用场景：
+    1)表中字段名与类中属性名不匹配时
+    2)多表关联查询映射
+    3)多表嵌套查询映射
+    参考：官网(mybatis.org/mybatis-3)
+    -->
+    <resultMap id="roleMenu" type="com.cy.pj.sys.pojo.SysRole">
+         <id property="id" column="id"/>
+         <result property="name" column="name"/>
+         <result property="remark" column="remark"/>
+         <!--one2many映射时使用collection-->
+         <collection property="menuIds" ofType="integer" >
+            <result column="menu_id"/>
+         </collection>
+    </resultMap>
+    <!--基于id查询角色以及角色对应的菜单信息-->
+    <select id="selectById" resultMap="roleMenu">
+      select r.id,r.name,r.remark,rm.menu_id
+      from sys_roles r  left  join  sys_role_menus rm
+      on r.id=rm.role_id
+      where r.id=#{id}
+    </select>
+    <!--修改角色自身信息-->
+    <update id="updateRole">
+        update sys_roles
+        set name=#{name},
+            remark=#{remark},
+            modifiedTime=now(),
+            modifiedUser=#{modifiedUser}
+        where id=#{id}
+    </update>
+
+</mapper>

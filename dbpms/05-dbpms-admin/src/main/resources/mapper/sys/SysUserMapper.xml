@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cy.pj.sys.dao.SysUserDao">
+      <select id="selectUsers" resultType="com.cy.pj.sys.pojo.SysUser">
+          select u.*,d.name as deptName
+          from sys_users u left join sys_depts d
+          on u.deptId=d.id
+          <where>
+              <if test="username!=null and username!=''">
+                  username like concat("%",#{username},"%")
+              </if>
+          </where>
+          order by createdTime desc
+      </select>
+
+    <select id="selectById" resultType="com.cy.pj.sys.pojo.SysUser">
+      select u.*,d.name as deptName
+      from sys_users u left join sys_depts d
+      on u.deptId=d.id
+      where u.id=#{id}
+    </select>
+
+      <insert id="insertUser"
+              parameterType="com.cy.pj.sys.pojo.SysUser"
+              useGeneratedKeys="true"
+              keyProperty="id">
+          insert into sys_users
+          (username,password,salt,mobile,email,deptId,valid,
+           createdTime,modifiedTime,createdUser,modifiedUser)
+          values
+          (#{username},#{password},#{salt},#{mobile},#{email},
+           #{deptId},#{valid}, now(),now(),#{createdUser},#{modifiedUser})
+      </insert>
+
+      <update id="updateUser" parameterType="com.cy.pj.sys.pojo.SysUser">
+          update sys_users
+          set username=#{username},
+              deptId=#{deptId},
+              mobile=#{mobile},
+              email=#{email},
+              modifiedTime=now(),
+              modifiedUser=#{modifiedUser}
+          where id=#{id}
+      </update>
+
+</mapper>

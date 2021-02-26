@@ -1,0 +1,123 @@
+<div class="row">
+	<div class="col-xs-12">
+		<div class="box">
+			<div class="box-header">
+				<h3 class="box-title">日志管理</h3>
+				<div class="box-tools">
+					<div class="input-group input-group-sm" style="width: 350px;">
+						<input type="text" name="table_search" id="searchNameId"
+							class="form-control pull-right" placeholder="用户名">
+
+						<div class="input-group-btn">
+							<button type="button" class="btn btn-default btn-search">
+                                <i class="fa fa-search"></i>
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- /.box-header -->
+			<div class="box-body table-responsive no-padding">
+				<table class="table table-hover" id="log-table">
+					<thead>
+						<tr>
+							<th>序号</th>
+							<th>用户名</th>
+							<th>操作</th>
+							<th>请求方法</th>
+							<th>IP</th>
+							<th>执行时长</th>
+						</tr>
+					</thead>
+					<tbody id="tbodyId">
+					    <tr>
+					       <td colspan="7">数据正在加载中...</td>
+					    </tr>
+					</tbody>
+				</table>
+			</div>
+			<div id="pageId" class="box-footer clearfix" dm="100">
+
+			</div>
+			<!-- /.box-body -->
+		</div>
+		<!-- /.box -->
+	</div>
+</div>
+<script type="text/javascript">
+    $(function(){
+    	//加载分页组件，组件加载完成执行分页查询
+    	$("#pageId").load("/modules/common/page.html",doGetObjects);
+    	//查询按钮事件注册
+		$(".input-group-btn").on("click",".btn-search",doQueryObjects);
+	});
+    //处理查询按钮点击事件
+	function doQueryObjects(){
+		$("#pageId").data("pageCurrent",1);
+		doGetObjects();
+	}
+	function doGetObjects(){
+		//1.params
+		let pageCurrent=$("#pageId").data("pageCurrent");
+		if(!pageCurrent)pageCurrent=1;
+		let params={pageCurrent:pageCurrent};//暂时默认指定页码值为1
+		let queryName=$("#searchNameId").val();//获取输入的用户名
+		if(queryName)params.username=queryName;//username不能随意写
+		//2.url
+		let url=`${baseUrl}/log/`;
+		//3.ajax request
+		$.ajax({
+			url:url,
+			data:params,
+			crossDomain:true,
+			xhrFields: {withCredentials:true},
+			success(result){
+				//处理查询到的响应结果
+				doHandleQueryResponseResult(result);
+			}
+		})
+	}
+	//处理查询结果
+	function doHandleQueryResponseResult(result){
+		if(result.state==1){//1表示ok
+			//呈现日志记录
+			doSetTableBodyRows(result.data.list);
+			//初始化分页信息
+			doSetPagination(result.data);
+		}else{
+			doSetTableBodyErrors(result.message);
+		}
+	}
+	//呈现服务端响应的错误信息
+	function doSetTableBodyErrors(msg){
+		//debugger
+		let thColumns=$("#log-table>thead>tr>th").length;
+		let tBody=$("#log-table>tbody");
+		let msgRow=`<tr><td colspan=${thColumns}>${msg}</td></tr>`
+		tBody.html(msgRow);
+	}
+	//在tbody中呈现当前页记录
+	function doSetTableBodyRows(records){
+		let tBody=$("#tbodyId");
+		tBody.empty();
+		records.forEach((item,i)=>tBody.append(doCreateRow(item,i)));//i表示下标
+	}
+	//渲染行
+	function doCreateRow(item,i){
+		return `<tr>
+            <td>${i+1}</td>
+            <td>${item.username}</td>
+            <td>${item.operation}</td>
+            <td>${item.method}</td>
+            <td>${item.ip}</td>
+            <td>${item.time}</td
+           </tr>`
+	}
+
+</script>
+
+
+
+
+
+
